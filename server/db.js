@@ -4,14 +4,17 @@ import dotenv from "dotenv";
 dotenv.config({ path: "server/.env" });
 dotenv.config();
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL?.replace(/\s+/g, "");
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.replace(/\s+/g, "");
 
 let supabaseClient = null;
 
 const getSupabase = () => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+  if (!SUPABASE_URL.startsWith("https://")) {
+    throw new Error("SUPABASE_URL must start with https://");
   }
   if (!supabaseClient) {
     supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -29,8 +32,22 @@ const must = (error, context) => {
 
 export const initDb = async () => {
   const supabase = getSupabase();
-  const { error } = await supabase.from("users").select("id").limit(1);
-  must(error, "Supabase connection");
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const { error } = await supabase.from("users").select("id").limit(1);
+      must(error, "Supabase connection");
+      return;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        const cause =
+          error && typeof error === "object" && "cause" in error ? `; cause: ${String(error.cause)}` : "";
+        throw new Error(`Supabase connection failed after ${maxAttempts} attempts${cause}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+    }
+  }
 };
 
 export const usersRepo = {
@@ -135,6 +152,34 @@ export const bookingsRepo = {
       .eq("user_id", userId)
       .order("id", { ascending: false });
     must(error, "List bookings by user");
+    return data;
+  },
+};
+
+export const tournamentsRepo = {
+  async register({ userId, tournamentCode, tournamentTitle }) {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("tournament_registrations")
+      .insert({
+        user_id: userId,
+        tournament_code: tournamentCode,
+        tournament_title: tournamentTitle,
+      })
+      .select("id")
+      .single();
+    must(error, "Register tournament");
+    return data.id;
+  },
+
+  async listByUser(userId) {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("tournament_registrations")
+      .select("id, tournament_code, tournament_title, created_at")
+      .eq("user_id", userId)
+      .order("id", { ascending: false });
+    must(error, "List tournament registrations");
     return data;
   },
 };

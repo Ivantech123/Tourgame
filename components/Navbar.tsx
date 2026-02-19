@@ -1,15 +1,23 @@
-
-import React from 'react';
+﻿import React from 'react';
 import { User } from '../App';
 
 interface NavbarProps {
   onHomeClick: () => void;
   onProfileClick: () => void;
   onLoginClick: () => void;
+  onTournamentsClick: () => void;
+  onTrainingsClick: () => void;
   user: User | null;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onHomeClick, onProfileClick, onLoginClick, user }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onHomeClick,
+  onProfileClick,
+  onLoginClick,
+  onTournamentsClick,
+  onTrainingsClick,
+  user,
+}) => {
   return (
     <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-12 py-4 bg-slate-950/70 backdrop-blur-xl border-b border-white/5">
       <div className="flex items-center space-x-2 cursor-pointer group" onClick={onHomeClick}>
@@ -20,18 +28,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onHomeClick, onProfileClick, onL
           TOURGAME
         </span>
       </div>
-      
+
       <div className="hidden lg:flex items-center space-x-10 text-xs font-bold tracking-[0.2em] uppercase text-slate-300">
         <button onClick={onHomeClick} className="hover:text-purple-400 transition-colors uppercase">Главная</button>
-        <a href="#" className="hover:text-purple-400 transition-colors">Турниры</a>
-        <a href="#" className="hover:text-purple-400 transition-colors">Тренинги</a>
-        <a href="#" className="hover:text-purple-400 transition-colors">Сообщество</a>
+        <button onClick={onTournamentsClick} className="hover:text-purple-400 transition-colors">Турниры</button>
+        <button onClick={onTrainingsClick} className="hover:text-purple-400 transition-colors">Тренировки</button>
+        <button className="hover:text-purple-400 transition-colors">Сообщество</button>
       </div>
 
       <div className="flex items-center space-x-4">
         {user ? (
           <div className="flex items-center space-x-4 bg-white/5 p-1 pr-4 rounded-full border border-white/10 hover:border-purple-500/30 transition-all">
-            <div 
+            <div
               onClick={onProfileClick}
               className="w-10 h-10 rounded-full overflow-hidden border-2 border-purple-500 cursor-pointer hover:scale-105 transition-transform"
             >
@@ -43,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onHomeClick, onProfileClick, onL
             </div>
           </div>
         ) : (
-          <button 
+          <button
             onClick={onLoginClick}
             className="px-6 py-2 rounded-full border border-purple-500/30 hover:border-purple-500 bg-purple-500/10 hover:bg-purple-500/20 transition-all text-xs font-bold uppercase tracking-widest"
           >

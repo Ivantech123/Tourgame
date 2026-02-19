@@ -71,3 +71,12 @@ export const apiCreateBooking = (payload: {
     body: JSON.stringify(payload),
   });
 
+export const apiRegisterTournament = (payload: {
+  userId: string;
+  tournamentCode: string;
+  tournamentTitle: string;
+}) =>
+  request<{ registrationId: number }>("/api/tournaments/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import cors from "cors";
 import express from "express";
-import { bookingsRepo, initDb, usersRepo } from "./db.js";
+import { bookingsRepo, initDb, tournamentsRepo, usersRepo } from "./db.js";
 
 dotenv.config({ path: "server/.env" });
 dotenv.config();
@@ -168,6 +168,37 @@ app.get("/api/bookings/:userId", async (req, res) => {
     res.json({ bookings: items });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: "internal server error" });
+  }
+});
+
+app.post("/api/tournaments/register", async (req, res) => {
+  try {
+    const { userId, tournamentCode, tournamentTitle } = req.body ?? {};
+    if (!userId || !tournamentCode || !tournamentTitle) {
+      res.status(400).json({ error: "missing required tournament registration fields" });
+      return;
+    }
+
+    const user = await usersRepo.findPublicById(Number(userId));
+    if (!user) {
+      res.status(404).json({ error: "user not found" });
+      return;
+    }
+
+    const registrationId = await tournamentsRepo.register({
+      userId: Number(userId),
+      tournamentCode: String(tournamentCode),
+      tournamentTitle: String(tournamentTitle),
+    });
+
+    res.status(201).json({ registrationId });
+  } catch (error) {
+    console.error(error);
+    if (error instanceof Error && error.message.toLowerCase().includes("duplicate")) {
+      res.status(409).json({ error: "already registered for this tournament" });
+      return;
+    }
     res.status(500).json({ error: "internal server error" });
   }
 });
