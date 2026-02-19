@@ -1,7 +1,11 @@
+import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import cors from "cors";
 import express from "express";
 import { bookingsRepo, initDb, usersRepo } from "./db.js";
+
+dotenv.config({ path: "server/.env" });
+dotenv.config();
 
 export const app = express();
 export const dbReady = initDb();
@@ -161,4 +165,3 @@ app.get("/api/bookings/:userId", async (req, res) => {
     res.status(500).json({ error: "internal server error" });
   }
 });
-

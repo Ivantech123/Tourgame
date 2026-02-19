@@ -1,144 +1,87 @@
-import fs from "fs";
-import path from "path";
-import sqlite3 from "sqlite3";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
 
-const DB_DIR = process.env.VERCEL
-  ? path.resolve("/tmp", "tourgame-data")
-  : path.resolve(process.cwd(), "server", "data");
-const DB_PATH = path.join(DB_DIR, "database.sqlite");
+dotenv.config({ path: "server/.env" });
+dotenv.config();
 
-if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
 }
 
-const db = new sqlite3.Database(DB_PATH);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 
-const run = (sql, params = []) =>
-  new Promise((resolve, reject) => {
-    db.run(sql, params, function onRun(err) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(this);
-    });
-  });
-
-const get = (sql, params = []) =>
-  new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(row);
-    });
-  });
-
-const all = (sql, params = []) =>
-  new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(rows);
-    });
-  });
-
-const defaultAvatar =
-  "https://images.unsplash.com/photo-1566492031773-4f4e44671857?q=80&w=200&h=200&auto=format&fit=crop";
+const must = (error, context) => {
+  if (error) {
+    throw new Error(`${context}: ${error.message}`);
+  }
+};
 
 export const initDb = async () => {
-  await run("PRAGMA foreign_keys = ON");
-
-  await run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nickname TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      balance INTEGER NOT NULL DEFAULT 0,
-      avatar TEXT NOT NULL DEFAULT '${defaultAvatar}',
-      bio TEXT DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  await run(`
-    CREATE TABLE IF NOT EXISTS bookings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      trainer_id INTEGER NOT NULL,
-      trainer_name TEXT NOT NULL,
-      game TEXT NOT NULL,
-      character_name TEXT NOT NULL,
-      duration_minutes INTEGER NOT NULL,
-      level INTEGER NOT NULL,
-      time_slot TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
+  const { error } = await supabase.from("users").select("id").limit(1);
+  must(error, "Supabase connection");
 };
 
 export const usersRepo = {
   async create({ nickname, email, passwordHash }) {
-    const result = await run(
-      `
-      INSERT INTO users (nickname, email, password_hash)
-      VALUES (?, ?, ?)
-      `,
-      [nickname, email.toLowerCase(), passwordHash]
-    );
-    return result.lastID;
+    const normalizedEmail = email.toLowerCase();
+    const { data, error } = await supabase
+      .from("users")
+      .insert({
+        nickname,
+        email: normalizedEmail,
+        password_hash: passwordHash,
+      })
+      .select("id")
+      .single();
+    must(error, "Create user");
+    return data.id;
   },
 
-  findByEmail(email) {
-    return get(
-      `
-      SELECT id, nickname, email, password_hash, balance, avatar, bio
-      FROM users
-      WHERE email = ?
-      `,
-      [email.toLowerCase()]
-    );
+  async findByEmail(email) {
+    const normalizedEmail = email.toLowerCase();
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, nickname, email, password_hash, balance, avatar, bio")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+    must(error, "Find user by email");
+    return data;
   },
 
-  findPublicById(id) {
-    return get(
-      `
-      SELECT id, nickname, email, balance, avatar, bio
-      FROM users
-      WHERE id = ?
-      `,
-      [id]
-    );
+  async findPublicById(id) {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, nickname, email, balance, avatar, bio")
+      .eq("id", id)
+      .maybeSingle();
+    must(error, "Find user by id");
+    return data;
   },
 
   async updateProfile(id, fields) {
-    const updates = [];
-    const params = [];
+    const updates = {};
 
     if (typeof fields.nickname === "string") {
-      updates.push("nickname = ?");
-      params.push(fields.nickname);
+      updates.nickname = fields.nickname;
     }
     if (typeof fields.bio === "string") {
-      updates.push("bio = ?");
-      params.push(fields.bio);
+      updates.bio = fields.bio;
     }
     if (typeof fields.avatar === "string") {
-      updates.push("avatar = ?");
-      params.push(fields.avatar);
+      updates.avatar = fields.avatar;
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(updates).length === 0) {
       return this.findPublicById(id);
     }
 
-    params.push(id);
-    await run(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, params);
+    const { error } = await supabase.from("users").update(updates).eq("id", id);
+    must(error, "Update user profile");
     return this.findPublicById(id);
   },
 };
@@ -154,26 +97,31 @@ export const bookingsRepo = {
     level,
     timeSlot,
   }) {
-    const result = await run(
-      `
-      INSERT INTO bookings (
-        user_id, trainer_id, trainer_name, game, character_name, duration_minutes, level, time_slot
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      [userId, trainerId, trainerName, game, character, durationMinutes, level, timeSlot]
-    );
-    return result.lastID;
+    const { data, error } = await supabase
+      .from("bookings")
+      .insert({
+        user_id: userId,
+        trainer_id: trainerId,
+        trainer_name: trainerName,
+        game,
+        character_name: character,
+        duration_minutes: durationMinutes,
+        level,
+        time_slot: timeSlot,
+      })
+      .select("id")
+      .single();
+    must(error, "Create booking");
+    return data.id;
   },
 
-  listByUser(userId) {
-    return all(
-      `
-      SELECT id, trainer_id, trainer_name, game, character_name, duration_minutes, level, time_slot, created_at
-      FROM bookings
-      WHERE user_id = ?
-      ORDER BY id DESC
-      `,
-      [userId]
-    );
+  async listByUser(userId) {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("id, trainer_id, trainer_name, game, character_name, duration_minutes, level, time_slot, created_at")
+      .eq("user_id", userId)
+      .order("id", { ascending: false });
+    must(error, "List bookings by user");
+    return data;
   },
 };
