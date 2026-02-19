@@ -7,13 +7,19 @@ dotenv.config();
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-}
+let supabaseClient = null;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const getSupabase = () => {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+  if (!supabaseClient) {
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  return supabaseClient;
+};
 
 const must = (error, context) => {
   if (error) {
@@ -22,12 +28,14 @@ const must = (error, context) => {
 };
 
 export const initDb = async () => {
+  const supabase = getSupabase();
   const { error } = await supabase.from("users").select("id").limit(1);
   must(error, "Supabase connection");
 };
 
 export const usersRepo = {
   async create({ nickname, email, passwordHash }) {
+    const supabase = getSupabase();
     const normalizedEmail = email.toLowerCase();
     const { data, error } = await supabase
       .from("users")
@@ -43,6 +51,7 @@ export const usersRepo = {
   },
 
   async findByEmail(email) {
+    const supabase = getSupabase();
     const normalizedEmail = email.toLowerCase();
     const { data, error } = await supabase
       .from("users")
@@ -54,6 +63,7 @@ export const usersRepo = {
   },
 
   async findPublicById(id) {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from("users")
       .select("id, nickname, email, balance, avatar, bio")
@@ -64,6 +74,7 @@ export const usersRepo = {
   },
 
   async updateProfile(id, fields) {
+    const supabase = getSupabase();
     const updates = {};
 
     if (typeof fields.nickname === "string") {
@@ -97,6 +108,7 @@ export const bookingsRepo = {
     level,
     timeSlot,
   }) {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from("bookings")
       .insert({
@@ -116,6 +128,7 @@ export const bookingsRepo = {
   },
 
   async listByUser(userId) {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from("bookings")
       .select("id, trainer_id, trainer_name, game, character_name, duration_minutes, level, time_slot, created_at")

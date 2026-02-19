@@ -8,7 +8,10 @@ dotenv.config({ path: "server/.env" });
 dotenv.config();
 
 export const app = express();
-export const dbReady = initDb();
+let dbInitError = null;
+export const dbReady = initDb().catch((error) => {
+  dbInitError = error;
+});
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -16,6 +19,9 @@ app.use(express.json({ limit: "2mb" }));
 app.use(async (_req, res, next) => {
   try {
     await dbReady;
+    if (dbInitError) {
+      throw dbInitError;
+    }
     next();
   } catch (error) {
     console.error("DB init failed", error);
