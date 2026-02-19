@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiLogin, apiRegister } from '../api';
+import { apiLogin, apiRegister } from '../clientApi';
 import type { User } from '../App';
 
 interface AuthModalProps {
@@ -25,11 +25,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 
       if (mode === 'register') {
         if (password !== confirmPassword) {
-          setError('Пароли не совпадают');
+          setError('РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚');
           return;
         }
         if (password.length < 6) {
-          setError('Пароль слишком короткий (мин. 6 символов)');
+          setError('РџР°СЂРѕР»СЊ СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёР№ (РјРёРЅ. 6 СЃРёРјРІРѕР»РѕРІ)');
           return;
         }
 
@@ -41,7 +41,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
       const { user } = await apiLogin({ email, password });
       onSuccess(user);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ошибка авторизации';
+      const message = err instanceof Error ? err.message : 'РћС€РёР±РєР° Р°РІС‚РѕСЂРёР·Р°С†РёРё';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -61,16 +61,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
         </button>
 
         <h2 className="font-orbitron text-3xl font-black mb-2 text-white glow-text uppercase tracking-tighter text-center">
-          {mode === 'register' ? 'Регистрация' : 'Вход'}
+          {mode === 'register' ? 'Р РµРіРёСЃС‚СЂР°С†РёСЏ' : 'Р’С…РѕРґ'}
         </h2>
         <p className="text-slate-400 text-center text-sm mb-8">
-          {mode === 'register' ? 'Создай аккаунт для доступа ко всем функциям' : 'С возвращением! Введите свои данные'}
+          {mode === 'register' ? 'РЎРѕР·РґР°Р№ Р°РєРєР°СѓРЅС‚ РґР»СЏ РґРѕСЃС‚СѓРїР° РєРѕ РІСЃРµРј С„СѓРЅРєС†РёСЏРј' : 'РЎ РІРѕР·РІСЂР°С‰РµРЅРёРµРј! Р’РІРµРґРёС‚Рµ СЃРІРѕРё РґР°РЅРЅС‹Рµ'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {mode === 'register' && (
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Имя пользователя / Ник</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ / РќРёРє</label>
               <input
                 required
                 type="text"
@@ -83,7 +83,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
           )}
 
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Электронная почта</label>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Р­Р»РµРєС‚СЂРѕРЅРЅР°СЏ РїРѕС‡С‚Р°</label>
             <input
               required
               type="email"
@@ -95,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Пароль</label>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">РџР°СЂРѕР»СЊ</label>
             <input
               required
               type="password"
@@ -107,7 +107,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
 
           {mode === 'register' && (
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Повторите пароль</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">РџРѕРІС‚РѕСЂРёС‚Рµ РїР°СЂРѕР»СЊ</label>
               <input
                 required
                 type="password"
@@ -125,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             disabled={isLoading}
             className="w-full py-5 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-xl text-white font-orbitron font-bold tracking-[0.2em] uppercase hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(168,85,247,0.3)] mt-4 disabled:opacity-70"
           >
-            {isLoading ? '...' : mode === 'register' ? 'Зарегистрироваться' : 'Войти'}
+            {isLoading ? '...' : mode === 'register' ? 'Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ' : 'Р’РѕР№С‚Рё'}
           </button>
         </form>
 
@@ -137,7 +137,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose, onSuccess }) => {
             }}
             className="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors uppercase tracking-widest"
           >
-            {mode === 'register' ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
+            {mode === 'register' ? 'РЈР¶Рµ РµСЃС‚СЊ Р°РєРєР°СѓРЅС‚? Р’РѕР№С‚Рё' : 'РќРµС‚ Р°РєРєР°СѓРЅС‚Р°? Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ'}
           </button>
         </div>
       </div>

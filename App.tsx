@@ -7,7 +7,7 @@ import { HeroCarousel } from './components/HeroCarousel';
 import { TrainersGallery } from './components/TrainersGallery';
 import { AuthModal } from './components/AuthModal';
 import { ProfilePage } from './components/ProfilePage';
-import { apiUpdateUser } from './api';
+import { apiUpdateUser } from './clientApi';
 
 export interface User {
   email: string;

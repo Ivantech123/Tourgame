@@ -6,8 +6,18 @@ type AuthPayload = {
   password: string;
 };
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
+
+const parseResponse = async (response: Response) => {
+  const raw = await response.text();
+  const contentType = response.headers.get("content-type") ?? "";
+  const isJson = contentType.includes("application/json");
+  const data = isJson && raw ? JSON.parse(raw) : null;
+  return { raw, data };
+};
+
 const request = async <T>(url: string, options: RequestInit): Promise<T> => {
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -15,10 +25,16 @@ const request = async <T>(url: string, options: RequestInit): Promise<T> => {
     },
   });
 
-  const data = await response.json();
+  const { raw, data } = await parseResponse(response);
   if (!response.ok) {
-    throw new Error(data.error ?? "Request failed");
+    const fallback = raw ? raw.slice(0, 180) : `HTTP ${response.status}`;
+    throw new Error(data?.error ?? fallback);
   }
+
+  if (!data) {
+    throw new Error("API returned non-JSON response");
+  }
+
   return data as T;
 };
 

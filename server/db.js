@@ -2,7 +2,9 @@ import fs from "fs";
 import path from "path";
 import sqlite3 from "sqlite3";
 
-const DB_DIR = path.resolve(process.cwd(), "server", "data");
+const DB_DIR = process.env.VERCEL
+  ? path.resolve("/tmp", "tourgame-data")
+  : path.resolve(process.cwd(), "server", "data");
 const DB_PATH = path.join(DB_DIR, "database.sqlite");
 
 if (!fs.existsSync(DB_DIR)) {
@@ -175,4 +177,3 @@ export const bookingsRepo = {
     );
   },
 };
-

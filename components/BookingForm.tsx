@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiCreateBooking } from '../api';
+import { apiCreateBooking } from '../clientApi';
 
 interface Trainer {
   id: number;
@@ -40,7 +40,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
     e.preventDefault();
 
     if (!userId) {
-      alert('Сначала войдите в аккаунт, чтобы записаться.');
+      alert('РЎРЅР°С‡Р°Р»Р° РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚, С‡С‚РѕР±С‹ Р·Р°РїРёСЃР°С‚СЊСЃСЏ.');
       return;
     }
 
@@ -57,10 +57,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
         timeSlot: selectedSlot,
       });
 
-      alert(`Заявка отправлена. Тренер: ${trainer.name}, слот: ${selectedSlot}`);
+      alert(`Р—Р°СЏРІРєР° РѕС‚РїСЂР°РІР»РµРЅР°. РўСЂРµРЅРµСЂ: ${trainer.name}, СЃР»РѕС‚: ${selectedSlot}`);
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Не удалось создать запись';
+      const message = error instanceof Error ? error.message : 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ Р·Р°РїРёСЃСЊ';
       alert(message);
     } finally {
       setIsSubmitting(false);
@@ -80,19 +80,19 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
         </button>
 
         <h2 className="font-orbitron text-3xl font-black mb-2 text-white glow-text uppercase tracking-tighter">
-          Запись на занятие
+          Р—Р°РїРёСЃСЊ РЅР° Р·Р°РЅСЏС‚РёРµ
         </h2>
         <p className="text-purple-400 font-bold text-sm uppercase tracking-widest mb-8">
-          Тренер: {trainer.name}
+          РўСЂРµРЅРµСЂ: {trainer.name}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Длительность</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ</label>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { id: '30', label: '30 минут' },
-                { id: '60', label: '1 час' }
+                { id: '30', label: '30 РјРёРЅСѓС‚' },
+                { id: '60', label: '1 С‡Р°СЃ' }
               ].map((d) => (
                 <button
                   key={d.id}
@@ -112,7 +112,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Выбор игры</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Р’С‹Р±РѕСЂ РёРіСЂС‹</label>
               <select
                 value={game}
                 onChange={(e) => setGame(e.target.value)}
@@ -125,7 +125,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Персонаж</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">РџРµСЂСЃРѕРЅР°Р¶</label>
               <select
                 value={character}
                 onChange={(e) => setCharacter(e.target.value)}
@@ -140,7 +140,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
 
           <div>
             <div className="flex justify-between items-end mb-4">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Ваш текущий уровень</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Р’Р°С€ С‚РµРєСѓС‰РёР№ СѓСЂРѕРІРµРЅСЊ</label>
               <span className="text-2xl font-orbitron font-black text-purple-400">{level} / 10</span>
             </div>
             <input
@@ -154,7 +154,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Доступное время (сегодня)</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Р”РѕСЃС‚СѓРїРЅРѕРµ РІСЂРµРјСЏ (СЃРµРіРѕРґРЅСЏ)</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {TIME_SLOTS.map((slot) => (
                 <button
@@ -178,7 +178,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ trainer, onClose, user
             disabled={!selectedSlot || isSubmitting}
             className="w-full py-6 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-2xl text-white font-orbitron font-bold tracking-[0.3em] uppercase hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(168,85,247,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Отправка...' : 'Подтвердить запись'}
+            {isSubmitting ? 'РћС‚РїСЂР°РІРєР°...' : 'РџРѕРґС‚РІРµСЂРґРёС‚СЊ Р·Р°РїРёСЃСЊ'}
           </button>
         </form>
       </div>
